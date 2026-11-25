@@ -465,40 +465,23 @@
       color: var(--white);
     }
 
-    .calibration-panel {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin: 0 0 12px;
-      padding: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 16px;
-      background: rgba(255, 255, 255, 0.045);
-    }
-
-    .calibration-title {
-      grid-column: 1 / -1;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+    #debug-instructions {
+      position: fixed;
+      top: calc(max(16px, env(safe-area-inset-top)) + 54px);
+      left: 50%;
+      z-index: 120;
+      width: max-content;
+      max-width: calc(100vw - 32px);
+      padding: 9px 13px;
+      border: 1px solid rgba(242, 198, 109, 0.35);
+      border-radius: 999px;
+      background: rgba(8, 27, 44, 0.88);
       color: var(--gold-light);
       font-size: 11px;
-      font-weight: 800;
+      text-align: center;
+      transform: translateX(-50%);
+      pointer-events: none;
     }
-
-    .calibration-title button {
-      border: 0;
-      background: transparent;
-      color: var(--muted);
-      font: inherit;
-      font-size: 10px;
-      text-decoration: underline;
-    }
-
-    .calibration-control { display: grid; gap: 5px; }
-    .calibration-control label { color: var(--muted); font-size: 10px; }
-    .calibration-control input { width: 100%; accent-color: var(--gold); }
-    .calibration-value { color: var(--white); font-size: 10px; font-variant-numeric: tabular-nums; }
 
     #ui-controls {
       display: grid;
@@ -799,15 +782,6 @@
         </label>
       </div>
 
-      <div class="calibration-panel" aria-label="Kalibrasi posisi aksesori">
-        <div class="calibration-title"><span>Kalibrasi langsung</span><button id="calibration-reset" type="button">Reset posisi</button></div>
-        <div class="calibration-control"><label for="hat-x">Toga kiri / kanan</label><input id="hat-x" data-kind="hats" data-axis="0" type="range" min="-0.25" max="0.25" step="0.005"><output class="calibration-value" id="hat-x-value"></output></div>
-        <div class="calibration-control"><label for="hat-y">Toga atas / bawah</label><input id="hat-y" data-kind="hats" data-axis="1" type="range" min="-0.15" max="0.35" step="0.005"><output class="calibration-value" id="hat-y-value"></output></div>
-        <div class="calibration-control"><label for="hat-size">Ukuran toga</label><input id="hat-size" data-kind="hats" data-axis="scale" type="range" min="0.08" max="0.32" step="0.005"><output class="calibration-value" id="hat-size-value"></output></div>
-        <div class="calibration-control"><label for="glasses-x">Kacamata kiri / kanan</label><input id="glasses-x" data-kind="glasses" data-axis="0" type="range" min="-0.15" max="0.15" step="0.002"><output class="calibration-value" id="glasses-x-value"></output></div>
-        <div class="calibration-control"><label for="glasses-y">Kacamata atas / bawah</label><input id="glasses-y" data-kind="glasses" data-axis="1" type="range" min="-0.15" max="0.15" step="0.002"><output class="calibration-value" id="glasses-y-value"></output></div>
-        <div class="calibration-control"><label for="glasses-size">Ukuran kacamata</label><input id="glasses-size" data-kind="glasses" data-axis="scale" type="range" min="0.06" max="0.22" step="0.002"><output class="calibration-value" id="glasses-size-value"></output></div>
-      </div>
 
       <div id="ui-controls">
         <button class="btn" id="btn-switch" type="button" disabled aria-label="Ganti ke kombinasi filter berikutnya">
