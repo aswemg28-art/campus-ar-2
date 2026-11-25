@@ -1,0 +1,42 @@
+{
+  "filters": [
+    {
+      "id": 1,
+      "name": "Filter Toga",
+      "accessories": [
+        {
+          "name": "toga_hat",
+          "model": "assets/models/toga_hat.glb",
+          "landmark": 10,
+          "position": [0, 0.06, 0.02],
+          "rotation": [0, 0, 0],
+          "scale": [0.34, 0.34, 0.34],
+          "animation": { "type": "sway", "speed": 1 }
+        },
+        {
+          "name": "glasses",
+          "model": "assets/models/glasses.glb",
+          "landmark": 168,
+          "position": [0, -0.015, 0.035],
+          "rotation": [0, 0, 0],
+          "scale": [0.25, 0.25, 0.25]
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Filter Kacamata Emas",
+      "accessories": [
+        {
+          "name": "glasses_v2",
+          "model": "assets/models/glasses.glb",
+          "landmark": 168,
+          "position": [0, -0.015, 0.045],
+          "rotation": [0, 0, 0],
+          "scale": [0.31, 0.31, 0.31],
+          "animation": { "type": "sway", "speed": 1.35 }
+        }
+      ]
+    }
+  ]
+}
