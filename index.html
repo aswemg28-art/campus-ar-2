@@ -291,7 +291,7 @@
 
     #lighting-hint {
       position: fixed;
-      bottom: calc(200px + env(safe-area-inset-bottom));
+      bottom: calc(270px + env(safe-area-inset-bottom));
       left: 50%;
       z-index: 110;
       display: flex;
@@ -381,6 +381,17 @@
       white-space: nowrap;
     }
 
+    #filter-style {
+      display: block;
+      overflow: hidden;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.4;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
     #filter-dots {
       display: flex;
       gap: 7px;
@@ -398,7 +409,60 @@
     .filter-dot.active {
       width: 22px;
       border-radius: 99px;
-      background: var(--gold);
+      box-shadow: 0 0 0 3px rgba(242, 198, 109, 0.18);
+    }
+
+    .style-pickers {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .style-field {
+      display: grid;
+      min-width: 0;
+      gap: 6px;
+    }
+
+    .style-field > span {
+      padding-left: 4px;
+      color: var(--gold-light);
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .style-field select {
+      width: 100%;
+      min-width: 0;
+      min-height: 44px;
+      padding: 9px 10px;
+      border: 1px solid rgba(242, 198, 109, 0.24);
+      border-radius: 13px;
+      outline: none;
+      background: #102c40;
+      color: var(--white);
+      font: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .style-field select:focus-visible {
+      border-color: var(--gold-light);
+      box-shadow: 0 0 0 3px rgba(242, 198, 109, 0.18);
+    }
+
+    .style-field select:disabled {
+      cursor: not-allowed;
+      opacity: 0.42;
+    }
+
+    .style-field option {
+      background: var(--navy);
+      color: var(--white);
     }
 
     #ui-controls {
@@ -520,7 +584,7 @@
 
     #toast {
       position: fixed;
-      bottom: calc(192px + env(safe-area-inset-bottom));
+      bottom: calc(262px + env(safe-area-inset-bottom));
       left: 50%;
       z-index: 300;
       max-width: calc(100vw - 40px);
@@ -571,6 +635,15 @@
         gap: 9px;
       }
 
+      .style-pickers {
+        gap: 8px;
+      }
+
+      .style-field select {
+        padding-inline: 7px;
+        font-size: 11px;
+      }
+
       .btn {
         padding-inline: 10px;
         font-size: 13px;
@@ -605,12 +678,21 @@
         display: none;
       }
 
+      .style-pickers {
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+
+      .style-field select {
+        min-height: 40px;
+      }
+
       #toast {
-        bottom: calc(152px + env(safe-area-inset-bottom));
+        bottom: calc(232px + env(safe-area-inset-bottom));
       }
 
       #lighting-hint {
-        bottom: calc(150px + env(safe-area-inset-bottom));
+        bottom: calc(240px + env(safe-area-inset-bottom));
       }
     }
 
@@ -664,14 +746,26 @@
     <section class="filter-dock" aria-label="Kontrol filter AR">
       <div class="filter-meta">
         <div class="filter-copy">
-          <span class="filter-kicker">Filter aktif</span>
-          <strong id="filter-name">Filter Toga</strong>
+          <span class="filter-kicker">Kombinasi aktif</span>
+          <strong id="filter-name">Toga Klasik + Kotak Emas</strong>
+          <span id="filter-style">Emas · Board kotak + Emas · Bingkai kotak</span>
         </div>
         <div id="filter-dots" aria-label="Pilihan filter"></div>
       </div>
 
+      <div class="style-pickers">
+        <label class="style-field">
+          <span>Bentuk &amp; warna toga</span>
+          <select id="hat-select" disabled aria-label="Pilih bentuk dan warna toga"></select>
+        </label>
+        <label class="style-field">
+          <span>Bentuk &amp; warna kacamata</span>
+          <select id="glasses-select" disabled aria-label="Pilih bentuk dan warna kacamata"></select>
+        </label>
+      </div>
+
       <div id="ui-controls">
-        <button class="btn" id="btn-switch" type="button" disabled aria-label="Ganti ke filter berikutnya">
+        <button class="btn" id="btn-switch" type="button" disabled aria-label="Ganti ke kombinasi filter berikutnya">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M20 7h-9a5 5 0 0 0-5 5"></path>
             <path d="m16 3 4 4-4 4"></path>

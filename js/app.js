@@ -4,7 +4,10 @@ const elements = {
   photoButton: document.querySelector("#btn-photo"),
   retryButton: document.querySelector("#btn-retry"),
   filterName: document.querySelector("#filter-name"),
+  filterStyle: document.querySelector("#filter-style"),
   filterDots: document.querySelector("#filter-dots"),
+  hatSelect: document.querySelector("#hat-select"),
+  glassesSelect: document.querySelector("#glasses-select"),
   trackingText: document.querySelector("#tracking-text"),
   lightingHint: document.querySelector("#lighting-hint"),
   debugBadge: document.querySelector("#debug-badge"),
@@ -19,8 +22,10 @@ const elements = {
 
 let THREE;
 let GLTFLoader;
-let filtersConfig = [];
-let currentFilterIndex = 0;
+let hatsConfig = [];
+let glassesConfig = [];
+let currentHatIndex = 0;
+let currentGlassesIndex = 0;
 let filterLoadVersion = 0;
 let mindarThree;
 let renderer;
@@ -29,6 +34,7 @@ let camera;
 let clock;
 let gltfLoader;
 let isReady = false;
+let isSwitching = false;
 let lastFaceState = null;
 let toastTimeout;
 let stage = "config";
@@ -48,12 +54,15 @@ async function init() {
     const response = await fetch(configUrl);
     if (!response.ok) throw new Error(`Konfigurasi filter: HTTP ${response.status}`);
 
-    filtersConfig = await response.json();
-    if (!Array.isArray(filtersConfig.filters) || filtersConfig.filters.length === 0) {
-      throw new Error("Konfigurasi filter kosong atau tidak valid.");
+    const catalog = await response.json();
+    if (!Array.isArray(catalog.hats) || !Array.isArray(catalog.glasses) || catalog.hats.length === 0 || catalog.glasses.length === 0) {
+      throw new Error("Katalog topi atau kacamata kosong atau tidak valid.");
     }
 
-    currentFilterIndex = readLastFilter(filtersConfig.filters.length);
+    hatsConfig = catalog.hats;
+    glassesConfig = catalog.glasses;
+    currentHatIndex = readLastSelection("lastHat", hatsConfig.length);
+    currentGlassesIndex = readLastSelection("lastGlasses", glassesConfig.length);
     updateFilterUI();
 
     stage = "dependencies";
@@ -97,17 +106,18 @@ async function init() {
     gltfLoader = new GLTFLoader();
     clock = new THREE.Clock();
 
-    for (const filter of filtersConfig.filters) {
-      for (const accessory of filter.accessories) {
-        if (!anchors.has(accessory.landmark)) {
-          const anchor = mindarThree.addAnchor(accessory.landmark);
-          anchors.set(accessory.landmark, anchor);
-          addDebugMarker(anchor, accessory.landmark);
-        }
+    for (const accessory of [...hatsConfig, ...glassesConfig]) {
+      if (!anchors.has(accessory.landmark)) {
+        const anchor = mindarThree.addAnchor(accessory.landmark);
+        anchors.set(accessory.landmark, anchor);
+        addDebugMarker(anchor, accessory.landmark);
       }
     }
 
-    await loadFilterAccessories(filtersConfig.filters[currentFilterIndex], ++filterLoadVersion);
+    await loadAccessories(
+      [hatsConfig[currentHatIndex], glassesConfig[currentGlassesIndex]],
+      ++filterLoadVersion,
+    );
 
     elements.loadingText.textContent = "Mohon izinkan akses kamera…";
     await startCamera();
@@ -121,7 +131,7 @@ async function init() {
     renderer.setAnimationLoop(animate);
 
     isReady = true;
-    elements.switchButton.disabled = false;
+    setSelectionControlsDisabled(false);
     elements.photoButton.disabled = false;
     document.body.classList.remove("is-loading");
     document.body.classList.add("is-running");
@@ -173,8 +183,8 @@ async function startCamera() {
 }
 
 // Model dimuat dari JSON; placeholder tetap terlihat jika GLB gagal.
-async function loadFilterAccessories(filter, version) {
-  const loads = filter.accessories.map(async (accessory) => {
+async function loadAccessories(accessories, version) {
+  const loads = accessories.map(async (accessory) => {
     const anchor = anchors.get(accessory.landmark);
     const holder = new THREE.Group();
     holder.name = `accessory-${accessory.name}`;
@@ -182,7 +192,7 @@ async function loadFilterAccessories(filter, version) {
     if (accessory.rotation) holder.rotation.fromArray(accessory.rotation);
     holder.scale.fromArray(accessory.scale);
 
-    const placeholder = createPlaceholder(accessory.name);
+    const placeholder = createPlaceholder(accessory);
     holder.add(placeholder);
     anchor.group.add(holder);
     activeAccessories.push(holder);
@@ -242,15 +252,16 @@ function addDebugMarker(anchor, landmarkIndex) {
 }
 
 // Placeholder asli dari BoxGeometry, termasuk detail toga dan kacamata.
-function createPlaceholder(name) {
+function createPlaceholder(accessory) {
   const group = new THREE.Group();
-  const isGlasses = name.includes("glasses");
+  const isGlasses = accessory.id.includes("glasses");
   group.scale.setScalar(isGlasses ? 6 : 4);
 
+  const baseColor = new THREE.Color(accessory.previewColor);
   const gold = new THREE.MeshStandardMaterial({
-    color: 0xf2c66d,
-    metalness: 0.72,
-    roughness: 0.26,
+    color: baseColor,
+    metalness: accessory.colorName === "Emas" ? 0.72 : 0.2,
+    roughness: 0.28,
   });
   const dark = new THREE.MeshStandardMaterial({
     color: 0x172334,
@@ -258,8 +269,8 @@ function createPlaceholder(name) {
     roughness: 0.3,
   });
   const lightGold = new THREE.MeshStandardMaterial({
-    color: 0xffd98a,
-    metalness: 0.72,
+    color: baseColor.clone().lerp(new THREE.Color(0xffffff), 0.28),
+    metalness: accessory.colorName === "Emas" ? 0.72 : 0.2,
     roughness: 0.26,
   });
 
@@ -324,18 +335,54 @@ function animate() {
   renderer.render(scene, camera);
 }
 
-// Ganti filter, bersihkan resource lama, dan simpan pilihan terakhir.
+// Ganti pasangan berikutnya atau pilih topi dan kacamata secara terpisah.
 async function switchFilter() {
-  if (!isReady) return;
+  if (!isReady || isSwitching) return;
 
-  currentFilterIndex = (currentFilterIndex + 1) % filtersConfig.filters.length;
-  saveLastFilter(currentFilterIndex);
+  await applySelection(
+    (currentHatIndex + 1) % hatsConfig.length,
+    (currentGlassesIndex + 1) % glassesConfig.length,
+  );
+}
+
+async function changeSelection(kind, index) {
+  if (!isReady || isSwitching || !Number.isInteger(index)) return;
+
+  await applySelection(
+    kind === "hats" ? index : currentHatIndex,
+    kind === "glasses" ? index : currentGlassesIndex,
+  );
+}
+
+async function applySelection(hatIndex, glassesIndex) {
+  if (hatIndex < 0 || hatIndex >= hatsConfig.length || glassesIndex < 0 || glassesIndex >= glassesConfig.length) return;
+
+  isSwitching = true;
+  currentHatIndex = hatIndex;
+  currentGlassesIndex = glassesIndex;
+  saveLastSelection("lastHat", currentHatIndex);
+  saveLastSelection("lastGlasses", currentGlassesIndex);
+  setSelectionControlsDisabled(true);
   filterLoadVersion += 1;
   clearAllAccessories();
   updateFilterUI();
 
-  await loadFilterAccessories(filtersConfig.filters[currentFilterIndex], filterLoadVersion);
-  showToast(filtersConfig.filters[currentFilterIndex].name);
+  try {
+    await loadAccessories(
+      [hatsConfig[currentHatIndex], glassesConfig[currentGlassesIndex]],
+      filterLoadVersion,
+    );
+    showToast(`${hatsConfig[currentHatIndex].name} + ${glassesConfig[currentGlassesIndex].name}`);
+  } finally {
+    isSwitching = false;
+    setSelectionControlsDisabled(false);
+  }
+}
+
+function setSelectionControlsDisabled(disabled) {
+  elements.switchButton.disabled = disabled;
+  elements.hatSelect.disabled = disabled;
+  elements.glassesSelect.disabled = disabled;
 }
 
 function clearAllAccessories() {
@@ -463,45 +510,61 @@ function updateFaceStatus(hasFace) {
 }
 
 function updateFilterUI() {
-  const filter = filtersConfig.filters[currentFilterIndex];
-  if (!filter) return;
+  const hat = hatsConfig[currentHatIndex];
+  const glasses = glassesConfig[currentGlassesIndex];
+  if (!hat || !glasses) return;
 
-  elements.filterName.textContent = filter.name;
+  elements.filterName.textContent = `${hat.shortName} + ${glasses.shortName}`;
+  elements.filterStyle.textContent = `${hat.colorName} · ${hat.shape} + ${glasses.colorName} · ${glasses.shape}`;
+  populateSelect(elements.hatSelect, hatsConfig, currentHatIndex);
+  populateSelect(elements.glassesSelect, glassesConfig, currentGlassesIndex);
   elements.filterDots.replaceChildren();
 
-  filtersConfig.filters.forEach((item, index) => {
+  hatsConfig.forEach((item, index) => {
     const dot = document.createElement("span");
-    dot.className = `filter-dot${index === currentFilterIndex ? " active" : ""}`;
+    dot.className = `filter-dot${index === currentHatIndex ? " active" : ""}`;
+    dot.style.backgroundColor = item.previewColor;
     dot.setAttribute("aria-hidden", "true");
     elements.filterDots.appendChild(dot);
   });
 
   elements.filterDots.setAttribute(
     "aria-label",
-    `Filter ${currentFilterIndex + 1} dari ${filtersConfig.filters.length}`,
+    `Bentuk topi ${currentHatIndex + 1} dari ${hatsConfig.length}; kacamata ${currentGlassesIndex + 1} dari ${glassesConfig.length}`,
   );
 }
 
-function readLastFilter(filterCount) {
+function populateSelect(select, accessories, selectedIndex) {
+  select.replaceChildren();
+  accessories.forEach((accessory, index) => {
+    const option = document.createElement("option");
+    option.value = String(index);
+    option.textContent = `${accessory.name} — ${accessory.colorName}`;
+    select.appendChild(option);
+  });
+  select.value = String(selectedIndex);
+}
+
+function readLastSelection(key, itemCount) {
   try {
-    const saved = Number(localStorage.getItem("lastFilter"));
-    return Number.isInteger(saved) && saved >= 0 && saved < filterCount ? saved : 0;
+    const saved = Number(localStorage.getItem(key));
+    return Number.isInteger(saved) && saved >= 0 && saved < itemCount ? saved : 0;
   } catch {
     return 0;
   }
 }
 
-function saveLastFilter(index) {
+function saveLastSelection(key, index) {
   try {
-    localStorage.setItem("lastFilter", String(index));
+    localStorage.setItem(key, String(index));
   } catch {
-    // Filter tetap berfungsi jika penyimpanan browser dibatasi.
+    // Pilihan tetap berfungsi jika penyimpanan browser dibatasi.
   }
 }
 
 function showError(error) {
   isReady = false;
-  elements.switchButton.disabled = true;
+  setSelectionControlsDisabled(true);
   elements.photoButton.disabled = true;
   elements.intro.hidden = true;
   document.body.classList.remove("is-running", "face-found", "is-loading");
@@ -580,6 +643,12 @@ function showToast(message) {
 // Event dipasang setelah DOM tersedia karena module berada di akhir body.
 elements.switchButton.addEventListener("click", () => {
   void switchFilter();
+});
+elements.hatSelect.addEventListener("change", () => {
+  void changeSelection("hats", Number(elements.hatSelect.value));
+});
+elements.glassesSelect.addEventListener("change", () => {
+  void changeSelection("glasses", Number(elements.glassesSelect.value));
 });
 elements.photoButton.addEventListener("click", capturePhoto);
 elements.retryButton.addEventListener("click", () => window.location.reload());

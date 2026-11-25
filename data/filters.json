@@ -1,44 +1,93 @@
 {
-  "filters": [
+  "hats": [
     {
-      "id": 1,
-      "name": "Filter Toga",
-      "accessories": [
-        {
-          "name": "toga_hat",
-          "model": "assets/models/toga_hat.glb",
-          "landmark": 10,
-          "position": [0, 0.12, -0.05],
-          "rotation": [0, 0, 0],
-          "modelRotation": [0, 0, 0],
-          "scale": [0.25, 0.25, 0.25],
-          "animation": { "type": "sway", "speed": 0.8, "amplitude": 0.08 }
-        },
-        {
-          "name": "glasses",
-          "model": "assets/models/glasses.glb",
-          "landmark": 168,
-          "position": [0, 0, 0.04],
-          "rotation": [0, 0, 0],
-          "modelRotation": [0, 0, 0],
-          "scale": [0.15, 0.15, 0.15]
-        }
-      ]
+      "id": "toga-classic",
+      "name": "Toga Klasik",
+      "shortName": "Toga Klasik",
+      "shape": "Board kotak",
+      "colorName": "Emas",
+      "previewColor": "#D8AA45",
+      "model": "assets/models/toga_hat.glb",
+      "landmark": 10,
+      "position": [0, 0.12, -0.05],
+      "rotation": [0, 0, 0],
+      "modelRotation": [0, 0, 0],
+      "scale": [0.25, 0.25, 0.25],
+      "animation": { "type": "sway", "speed": 0.8, "amplitude": 0.05 }
     },
     {
-      "id": 2,
-      "name": "Filter Kacamata Emas",
-      "accessories": [
-        {
-          "name": "glasses_v2",
-          "model": "assets/models/glasses.glb",
-          "landmark": 168,
-          "position": [0, 0, 0.05],
-          "rotation": [0, 0, 0],
-          "modelRotation": [0, 0, 0],
-          "scale": [0.18, 0.18, 0.18]
-        }
-      ]
+      "id": "toga-oxford",
+      "name": "Toga Oxford",
+      "shortName": "Toga Oxford",
+      "shape": "Board bulat",
+      "colorName": "Navy",
+      "previewColor": "#203C5A",
+      "model": "assets/models/toga_oxford.glb",
+      "landmark": 10,
+      "position": [0, 0.12, -0.05],
+      "rotation": [0, 0, 0],
+      "modelRotation": [0, 0, 0],
+      "scale": [0.25, 0.25, 0.25],
+      "animation": { "type": "sway", "speed": 0.65, "amplitude": 0.035 }
+    },
+    {
+      "id": "toga-mortar",
+      "name": "Toga Mortar",
+      "shortName": "Toga Mortar",
+      "shape": "Mahkota tinggi",
+      "colorName": "Maroon",
+      "previewColor": "#7B263D",
+      "model": "assets/models/toga_mortar.glb",
+      "landmark": 10,
+      "position": [0, 0.12, -0.05],
+      "rotation": [0, 0, 0],
+      "modelRotation": [0, 0, 0],
+      "scale": [0.23, 0.23, 0.23],
+      "animation": { "type": "sway", "speed": 0.7, "amplitude": 0.035 }
+    }
+  ],
+  "glasses": [
+    {
+      "id": "glasses-square",
+      "name": "Kacamata Kotak",
+      "shortName": "Kotak Emas",
+      "shape": "Bingkai kotak",
+      "colorName": "Emas",
+      "previewColor": "#D8AA45",
+      "model": "assets/models/glasses.glb",
+      "landmark": 168,
+      "position": [0, 0, 0.04],
+      "rotation": [0, 0, 0],
+      "modelRotation": [0, 0, 0],
+      "scale": [0.15, 0.15, 0.15]
+    },
+    {
+      "id": "glasses-round",
+      "name": "Kacamata Bulat",
+      "shortName": "Bulat Hitam",
+      "shape": "Bingkai bulat",
+      "colorName": "Hitam",
+      "previewColor": "#171C22",
+      "model": "assets/models/glasses_round.glb",
+      "landmark": 168,
+      "position": [0, 0, 0.04],
+      "rotation": [0, 0, 0],
+      "modelRotation": [0, 0, 0],
+      "scale": [0.16, 0.16, 0.16]
+    },
+    {
+      "id": "glasses-cat-eye",
+      "name": "Kacamata Cat-eye",
+      "shortName": "Cat-eye Cokelat",
+      "shape": "Bingkai cat-eye",
+      "colorName": "Cokelat",
+      "previewColor": "#8A5738",
+      "model": "assets/models/glasses_cat_eye.glb",
+      "landmark": 168,
+      "position": [0, 0, 0.05],
+      "rotation": [0, 0, 0],
+      "modelRotation": [0, 0, 0],
+      "scale": [0.15, 0.15, 0.15]
     }
   ]
 }
