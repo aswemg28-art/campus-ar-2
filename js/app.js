@@ -6,6 +6,8 @@ const elements = {
   filterName: document.querySelector("#filter-name"),
   filterDots: document.querySelector("#filter-dots"),
   trackingText: document.querySelector("#tracking-text"),
+  lightingHint: document.querySelector("#lighting-hint"),
+  debugBadge: document.querySelector("#debug-badge"),
   loadingText: document.querySelector("#loading-text"),
   intro: document.querySelector(".intro-card"),
   error: document.querySelector("#error-message"),
@@ -34,6 +36,10 @@ let stage = "config";
 const anchors = new Map();
 const activeAccessories = [];
 const activeMixers = [];
+const isDebug = new URLSearchParams(window.location.search).get("debug") === "true";
+let lightingHintTimeout;
+
+elements.debugBadge.hidden = !isDebug;
 
 // Muat konfigurasi filter sebelum membuat scene dan anchor.
 async function init() {
@@ -94,7 +100,9 @@ async function init() {
     for (const filter of filtersConfig.filters) {
       for (const accessory of filter.accessories) {
         if (!anchors.has(accessory.landmark)) {
-          anchors.set(accessory.landmark, mindarThree.addAnchor(accessory.landmark));
+          const anchor = mindarThree.addAnchor(accessory.landmark);
+          anchors.set(accessory.landmark, anchor);
+          addDebugMarker(anchor, accessory.landmark);
         }
       }
     }
@@ -118,6 +126,7 @@ async function init() {
     document.body.classList.remove("is-loading");
     document.body.classList.add("is-running");
     updateFaceStatus(false);
+    showLightingHint();
   } catch (error) {
     console.warn("Inisialisasi AR dihentikan:", error);
     showError(error);
@@ -179,7 +188,7 @@ async function loadFilterAccessories(filter, version) {
     activeAccessories.push(holder);
 
     if (accessory.animation?.type === "sway") {
-      activeMixers.push(createSwayMixer(holder, accessory.animation.speed ?? 1));
+      activeMixers.push(createSwayMixer(holder, accessory.animation.speed ?? 1, accessory.animation.amplitude ?? 0.08));
     }
 
     try {
@@ -193,6 +202,7 @@ async function loadFilterAccessories(filter, version) {
 
       holder.remove(placeholder);
       disposeObject(placeholder);
+      if (accessory.modelRotation) gltf.scene.rotation.fromArray(accessory.modelRotation);
       holder.add(gltf.scene);
 
       gltf.scene.traverse((object) => {
@@ -212,9 +222,31 @@ async function loadFilterAccessories(filter, version) {
   await Promise.all(loads);
 }
 
+// Marker anchor hanya muncul saat URL memuat ?debug=true.
+function addDebugMarker(anchor, landmarkIndex) {
+  if (!isDebug) return;
+
+  const marker = new THREE.Mesh(
+    new THREE.SphereGeometry(0.015, 10, 8),
+    new THREE.MeshBasicMaterial({
+      color: landmarkIndex === 10 ? 0xff3b30 : 0x00e5ff,
+      wireframe: true,
+      depthTest: false,
+      transparent: true,
+      opacity: 0.95,
+    }),
+  );
+  marker.name = `debug-anchor-${landmarkIndex}`;
+  marker.renderOrder = 1000;
+  anchor.group.add(marker);
+}
+
 // Placeholder asli dari BoxGeometry, termasuk detail toga dan kacamata.
 function createPlaceholder(name) {
   const group = new THREE.Group();
+  const isGlasses = name.includes("glasses");
+  group.scale.setScalar(isGlasses ? 6 : 4);
+
   const gold = new THREE.MeshStandardMaterial({
     color: 0xf2c66d,
     metalness: 0.72,
@@ -225,6 +257,11 @@ function createPlaceholder(name) {
     metalness: 0.25,
     roughness: 0.3,
   });
+  const lightGold = new THREE.MeshStandardMaterial({
+    color: 0xffd98a,
+    metalness: 0.72,
+    roughness: 0.26,
+  });
 
   const addBox = (size, position, material = gold) => {
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(...size), material);
@@ -233,34 +270,35 @@ function createPlaceholder(name) {
     return mesh;
   };
 
-  if (name.includes("glasses")) {
-    addBox([0.58, 0.42, 0.08], [-0.36, 0, 0], dark);
-    addBox([0.58, 0.42, 0.08], [0.36, 0, 0], dark);
-    addBox([0.68, 0.08, 0.1], [-0.36, 0.19, 0.01]);
-    addBox([0.68, 0.08, 0.1], [-0.36, -0.19, 0.01]);
-    addBox([0.68, 0.08, 0.1], [0.36, 0.19, 0.01]);
-    addBox([0.68, 0.08, 0.1], [0.36, -0.19, 0.01]);
-    addBox([0.08, 0.42, 0.1], [-0.68, 0, 0.01]);
-    addBox([0.08, 0.42, 0.1], [-0.04, 0, 0.01]);
-    addBox([0.08, 0.42, 0.1], [0.68, 0, 0.01]);
-    addBox([0.08, 0.42, 0.1], [0.04, 0, 0.01]);
-    addBox([0.14, 0.08, 0.1], [0, 0.04, 0.01]);
-    addBox([0.08, 0.1, 0.7], [-0.68, 0.08, -0.31]);
-    addBox([0.08, 0.1, 0.7], [0.68, 0.08, -0.31]);
+  if (isGlasses) {
+    addBox([0.58, 0.42, 0.06], [-0.5, 0, 0], dark);
+    addBox([0.58, 0.42, 0.06], [0.5, 0, 0], dark);
+    addBox([0.14, 0.07, 0.1], [0, 0.04, 0.01]);
+    addBox([0.07, 0.09, 0.78], [-0.855, 0.12, -0.37]);
+    addBox([0.07, 0.09, 0.78], [0.855, 0.12, -0.37]);
+
+    for (const center of [-0.5, 0.5]) {
+      addBox([0.7, 0.07, 0.1], [center, 0.235, 0.01]);
+      addBox([0.7, 0.07, 0.1], [center, -0.235, 0.01]);
+      addBox([0.07, 0.42, 0.1], [center - 0.32, 0, 0.01]);
+      addBox([0.07, 0.42, 0.1], [center + 0.32, 0, 0.01]);
+    }
   } else {
-    addBox([1.05, 0.5, 0.82], [0, 0.27, 0]);
-    addBox([1.55, 0.1, 1.12], [0, 0.61, 0]);
-    addBox([0.07, 0.62, 0.07], [0.68, 0.34, 0.02]);
-    addBox([0.13, 0.18, 0.13], [0.68, -0.01, 0.02]);
+    addBox([1.05, 0.56, 0.86], [0, 0.34, 0]);
+    addBox([1.12, 0.09, 0.92], [0, 0.12, 0], lightGold);
+    addBox([1.65, 0.1, 1.2], [0, 0.72, 0]);
+    addBox([0.4, 0.08, 0.4], [0, 0.81, 0], lightGold);
+    addBox([0.07, 0.72, 0.07], [0.7, 0.4, 0.02], lightGold);
+    addBox([0.16, 0.2, 0.16], [0.7, 0.01, 0.02], lightGold);
   }
 
   return group;
 }
 
 // Clip loop dibuat saat runtime jika model tidak memiliki animasi sendiri.
-function createSwayMixer(holder, speed) {
+function createSwayMixer(holder, speed, amplitude) {
   const baseRotation = holder.quaternion.clone();
-  const angles = [0, 0.14, 0, -0.14, 0];
+  const angles = [0, amplitude, 0, -amplitude, 0];
   const times = [0, 0.6, 1.2, 1.8, 2.4];
   const values = angles.flatMap((angle) => {
     const rotation = baseRotation.clone().multiply(
@@ -516,6 +554,20 @@ function showError(error) {
   console.warn("Detail kesalahan:", error);
 }
 
+function showLightingHint() {
+  window.clearTimeout(lightingHintTimeout);
+  elements.lightingHint.hidden = false;
+  void elements.lightingHint.offsetWidth;
+  elements.lightingHint.classList.add("visible");
+
+  lightingHintTimeout = window.setTimeout(() => {
+    elements.lightingHint.classList.remove("visible");
+    lightingHintTimeout = window.setTimeout(() => {
+      elements.lightingHint.hidden = true;
+    }, 250);
+  }, 4000);
+}
+
 function showToast(message) {
   window.clearTimeout(toastTimeout);
   elements.toast.textContent = message;
@@ -533,6 +585,7 @@ elements.photoButton.addEventListener("click", capturePhoto);
 elements.retryButton.addEventListener("click", () => window.location.reload());
 
 window.addEventListener("pagehide", () => {
+  window.clearTimeout(lightingHintTimeout);
   if (renderer) renderer.setAnimationLoop(null);
   mindarThree?.controller?.stopProcessVideo?.();
   mindarThree?.video?.srcObject?.getTracks().forEach((track) => track.stop());

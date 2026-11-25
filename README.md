@@ -68,13 +68,26 @@ Buka `http://localhost:8080` di browser desktop. Untuk pengujian smartphone dala
 
 ## Konfigurasi filter
 
-Edit [data/filters.json](data/filters.json). Setiap aksesori membaca `model`, `landmark`, `position`, `rotation`, `scale`, dan animasi opsional dari JSON. Path model relatif terhadap `index.html`.
+Edit [data/filters.json](data/filters.json). Setiap aksesori membaca `model`, `landmark`, `position`, `rotation`, `modelRotation`, `scale`, dan animasi opsional dari JSON. Path model relatif terhadap `index.html`.
 
 Model GLB yang disertakan adalah placeholder geometris sederhana buatan proyek ini. Model pengganti dapat menggunakan nama file yang sama atau path lain di JSON. Jika GLB memiliki clip animasi sendiri, clip pertama akan diputar; animasi goyang tambahan tetap dibuat saat runtime.
 
+### Kalibrasi posisi
+
+| Aksesori | Anchor | Position awal | Scale awal |
+|---|---:|---|---:|
+| Topi toga | `10` | `[0, 0.12, -0.05]` | `[0.25, 0.25, 0.25]` |
+| Kacamata | `168` | `[0, 0, 0.04]` | `[0.15, 0.15, 0.15]` |
+
+Offset diterapkan ke wadah aksesori di bawah anchor, bukan ke `anchor.group`, karena MindAR menimpa matrix anchor setiap frame. `modelRotation` dapat digunakan untuk koreksi orientasi GLB tanpa mengubah anchor.
+
+Untuk melihat titik anchor, buka URL dengan parameter `?debug=true`. Anchor `10` ditandai merah dan anchor `168` ditandai biru. Hint pencahayaan tampil selama empat detik setelah kamera siap.
+
+Model saat ini masing-masing hanya 72 dan 156 triangle, tanpa tekstur, dan jauh di bawah batas 3 MB, 10.000 triangle, serta tekstur 512×512 per aksesori.
+
 ## Kompatibilitas Three.js r175
 
-MindAR 1.2.5 masih mengimpor konstanta lama `sRGBEncoding`, yang telah dihapus dari Three.js r175. Import map memberi scope khusus untuk modul CDN MindAR ke [js/three-mindar-compat.js](js/three-mindar-compat.js). Modul kecil tersebut mengekspor ulang Three.js **0.175.0** yang sama dan hanya menyediakan konstanta legacy yang dibutuhkan MindAR. Output warna aplikasi tetap menggunakan `SRGBColorSpace` bawaan r175.
+MindAR 1.2.5 masih mengimpor konstanta lama `sRGBEncoding`, yang telah dihapus dari Three.js r175. Import map memberi scope khusus untuk modul CDN MindAR ke [js/three-mindar-compat.js](js/three-mindar-compat.js). Modul kecil tersebut mengekspor ulang Three.js **0.175.0** yang sama, menyediakan konstanta legacy yang dibutuhkan MindAR, dan membuat `WebGLRenderer` dengan `preserveDrawingBuffer: true` agar hasil foto tidak hitam. Output warna aplikasi tetap menggunakan `SRGBColorSpace` bawaan r175.
 
 CDN MindAR dimuat sebagai ES module. Menggunakan tag script klasik untuk bundle ini akan gagal karena bundle memakai sintaks `import`/`export`.
 

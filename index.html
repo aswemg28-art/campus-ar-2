@@ -289,6 +289,51 @@
       box-shadow: 0 0 0 4px rgba(131, 230, 177, 0.12);
     }
 
+    #lighting-hint {
+      position: fixed;
+      bottom: calc(200px + env(safe-area-inset-bottom));
+      left: 50%;
+      z-index: 110;
+      display: flex;
+      width: max-content;
+      max-width: calc(100vw - 32px);
+      align-items: center;
+      gap: 8px;
+      padding: 10px 15px;
+      border: 1px solid rgba(242, 198, 109, 0.24);
+      border-radius: 999px;
+      background: rgba(8, 27, 44, 0.86);
+      color: var(--gold-light);
+      font-size: 12px;
+      font-weight: 600;
+      text-align: center;
+      opacity: 0;
+      transform: translate(-50%, 8px);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      backdrop-filter: blur(14px);
+      pointer-events: none;
+    }
+
+    #lighting-hint.visible {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    #lighting-hint svg {
+      width: 16px;
+      height: 16px;
+      flex: 0 0 auto;
+    }
+
+    #debug-badge {
+      padding: 2px 5px;
+      border-radius: 4px;
+      background: var(--gold);
+      color: var(--navy);
+      font-size: 8px;
+      letter-spacing: 0.08em;
+    }
+
     .filter-dock {
       position: fixed;
       right: 16px;
@@ -563,6 +608,10 @@
       #toast {
         bottom: calc(152px + env(safe-area-inset-bottom));
       }
+
+      #lighting-hint {
+        bottom: calc(150px + env(safe-area-inset-bottom));
+      }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -584,7 +633,7 @@
     <div class="scene-shade" aria-hidden="true"></div>
 
     <div id="umsu-label">UMSU</div>
-    <div class="edition-badge">Wisuda &amp; Kampus</div>
+    <div class="edition-badge"><span id="debug-badge" hidden>Debug</span>Wisuda &amp; Kampus</div>
 
     <section class="intro-card" aria-labelledby="intro-title">
       <div class="intro-emblem" aria-hidden="true">
@@ -602,6 +651,14 @@
     <div class="tracking-pill" role="status" aria-live="polite">
       <span class="status-dot" aria-hidden="true"></span>
       <span id="tracking-text">Menyiapkan kamera…</span>
+    </div>
+
+    <div id="lighting-hint" role="status" aria-live="polite" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="4"></circle>
+        <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42"></path>
+      </svg>
+      Pastikan wajah terkena cahaya dari depan
     </div>
 
     <section class="filter-dock" aria-label="Kontrol filter AR">
