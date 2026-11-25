@@ -85,12 +85,26 @@
         linear-gradient(160deg, #102f45, #071522 75%);
     }
 
+    #ar-container {
+      z-index: 0;
+      overflow: hidden;
+    }
+
     #ar-container video,
     #ar-container canvas {
       max-width: none;
     }
 
+    #ar-container video {
+      z-index: 0 !important;
+    }
+
+    #ar-container canvas {
+      z-index: 1 !important;
+    }
+
     #ar-container > div {
+      z-index: 2 !important;
       pointer-events: none;
     }
 

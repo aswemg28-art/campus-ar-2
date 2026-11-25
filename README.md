@@ -58,6 +58,14 @@ python -m http.server 8080
 
 Buka `http://localhost:8080` di browser desktop. Untuk pengujian smartphone dalam jaringan lokal, gunakan HTTPS karena `http://<IP-lokal>` bukan secure context.
 
+### Kamera tidak muncul
+
+1. Pastikan URL diawali `https://` untuk GitHub Pages. `http://localhost` dan `http://127.0.0.1` hanya boleh digunakan di komputer yang sama.
+2. Jangan membuka `index.html` melalui `file://`; gunakan server statis atau GitHub Pages.
+3. Klik ikon kamera/gembok di sebelah address bar, lalu izinkan kamera. Di Chrome Android: **Setelan situs → Kamera → Izinkan**.
+4. Tutup aplikasi kamera lain dan muat ulang halaman.
+5. Gunakan Chrome terbaru pada Android. Jika pesan “Kamera tidak ditemukan” muncul, periksa apakah perangkat memiliki kamera yang aktif.
+
 ## Konfigurasi filter
 
 Edit [data/filters.json](data/filters.json). Setiap aksesori membaca `model`, `landmark`, `position`, `rotation`, `scale`, dan animasi opsional dari JSON. Path model relatif terhadap `index.html`.
@@ -100,7 +108,7 @@ Validasi pada 25 November 2026:
 - Sintaks JavaScript, JSON filter, path model, dan struktur GLB lolos pemeriksaan.
 - Chromium berhasil memuat MindAR, OpenCV, MediaPipe, Three.js, dan kedua model.
 - Dengan kamera canvas simulasi, FaceMesh mendeteksi wajah sintetis, tombol ganti filter bekerja, PNG berhasil dibuat, dan pilihan filter tetap ada setelah reload.
-- Tanpa kamera fisik, pesan kesalahan kamera muncul di layar.
+- Tanpa kamera fisik, pesan “Kamera tidak ditemukan” muncul; simulasi izin ditolak menampilkan panduan pengaturan kamera.
 - Screenshot visual tidak tersedia karena viewport browser internal tidak memiliki surface terlihat. Uji kamera, tracking, dan unduhan pada perangkat fisik belum dilakukan.
 
 Isi [docs/device-matrix.md](docs/device-matrix.md) setelah menguji perangkat fisik. Pengujian browser otomatis tidak menggantikan uji kamera, tracking, dan unduhan pada smartphone.

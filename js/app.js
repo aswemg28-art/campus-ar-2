@@ -102,7 +102,7 @@ async function init() {
     await loadFilterAccessories(filtersConfig.filters[currentFilterIndex], ++filterLoadVersion);
 
     elements.loadingText.textContent = "Mohon izinkan akses kamera…";
-    await mindarThree.start();
+    await startCamera();
 
     const updateTracking = mindarThree.controller.onUpdate;
     mindarThree.controller.onUpdate = (update) => {
@@ -121,6 +121,45 @@ async function init() {
   } catch (error) {
     console.warn("Inisialisasi AR dihentikan:", error);
     showError(error);
+  }
+}
+
+// Pertahankan error getUserMedia asli karena MindAR menolak promise tanpa detail.
+async function startCamera() {
+  const mediaDevices = navigator.mediaDevices;
+  const originalGetUserMedia = mediaDevices.getUserMedia.bind(mediaDevices);
+  const originalDescriptor = Object.getOwnPropertyDescriptor(mediaDevices, "getUserMedia");
+  let cameraError = null;
+
+  const captureCameraError = async (constraints) => {
+    try {
+      return await originalGetUserMedia(constraints);
+    } catch (error) {
+      cameraError = error;
+      throw error;
+    }
+  };
+
+  try {
+    Object.defineProperty(mediaDevices, "getUserMedia", {
+      configurable: true,
+      writable: true,
+      value: captureCameraError,
+    });
+  } catch {
+    return mindarThree.start();
+  }
+
+  try {
+    await mindarThree.start();
+  } catch (error) {
+    throw cameraError || error;
+  } finally {
+    if (originalDescriptor) {
+      Object.defineProperty(mediaDevices, "getUserMedia", originalDescriptor);
+    } else {
+      delete mediaDevices.getUserMedia;
+    }
   }
 }
 
@@ -442,8 +481,33 @@ function showError(error) {
     title = "Filter belum dapat dimuat";
     detail = "File data/filters.json tidak dapat dibaca. Periksa file proyek dan koneksi internet, lalu muat ulang halaman.";
   } else if (stage === "camera") {
-    title = "Kamera belum dapat digunakan";
-    detail = "Izin kamera diperlukan. Silakan izinkan akses kamera di pengaturan browser Anda, lalu muat ulang halaman. Pastikan kamera tidak sedang digunakan aplikasi lain.";
+    const cameraErrors = {
+      NotAllowedError: [
+        "Izin kamera ditolak",
+        "Klik ikon kamera di sebelah address bar, pilih Izinkan/Allow, lalu muat ulang halaman. Pada Chrome Android, buka Setelan situs → Kamera → Izinkan.",
+      ],
+      SecurityError: [
+        "Izin kamera diblokir",
+        "Browser memblokir akses kamera. Aktifkan izin kamera untuk situs ini di pengaturan browser, lalu muat ulang halaman.",
+      ],
+      NotFoundError: [
+        "Kamera tidak ditemukan",
+        "Browser tidak menemukan kamera pada perangkat ini. Pastikan kamera terpasang dan aktif, lalu coba browser Chrome versi terbaru.",
+      ],
+      NotReadableError: [
+        "Kamera sedang tidak dapat digunakan",
+        "Kamera mungkin sedang dipakai aplikasi lain atau ada gangguan hardware. Tutup aplikasi kamera lain, lalu muat ulang halaman.",
+      ],
+      AbortError: [
+        "Kamera belum dapat dimulai",
+        "Proses kamera terhenti. Muat ulang halaman dan pastikan aplikasi kamera lain sudah ditutup.",
+      ],
+    };
+    const message = cameraErrors[error?.name] || [
+      "Kamera atau tracking belum siap",
+      "Pastikan halaman dibuka melalui HTTPS atau localhost, kamera tidak sedang dipakai aplikasi lain, dan koneksi internet dapat mengakses CDN. Lalu muat ulang halaman.",
+    ];
+    [title, detail] = message;
   }
 
   elements.errorTitle.textContent = title;
